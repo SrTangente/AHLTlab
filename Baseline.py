@@ -13,7 +13,7 @@ def tokenize(text):
 
 #process each file in directory
 def extract_entities(tokens):
-    db = open('DrugBank.txt', 'r').read()
+    db = open('./resources/DrugBank.txt', 'r').read()
     drugBank = word_tokenize(db)
     for t in tokens():
         word = t[0]
