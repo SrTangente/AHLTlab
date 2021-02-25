@@ -1,5 +1,6 @@
 from os import listdir
 import nltk
+import re
 from xml.dom.minidom import parse, parseString
 from nltk.tokenize import word_tokenize
 import evaluator
@@ -57,44 +58,60 @@ def check_suffixes(words):
                 return True
     return False
 
+
+def hasAlphaNum(word):
+    return re.match("[0-9]+.*[a-zA-Z]+", word) is not None
+
 # process each file in directory
 def extract_entities(tokens):
     drug_bank = load_drug_bank()
     entities = []
     for t in range(len(tokens)):
-        added = False
+        word = tokens[t][0]
         i = 0
+        words = word
+        lower_words = word.lower()
+        added = False
         while not added:
-            word = tokens[t][0]
-            word = word.lower()
-            if i > 0:
-                lower_words = " "
-                for k in range(0, i):
-                    try:
-                        lower_words = " ".join([lower_words, tokens[t+k][0]]).lower()
-                        print(lower_words)
-                    except IndexError:
-                        continue
-            else:
-                lower_words = word.lower()
             entity = {
-                'offset': f"{tokens[t][1]}-{tokens[t][2]}",
-                'text': word
+                'offset': f"{tokens[t][1]}-{tokens[t + i][2]}",
+                'text': words
             }
-            if lower_words in drug_bank:
-                entity["type"] = drug_bank[word]
-                entities.append(entity)
-                added = True
-            elif lower_words.isupper():
-                entity["type"] = "brand"
-                entities.append(entity)
-                added = True
-            elif check_suffixes(word):
-                entity["type"] = "drug"
-                entities.append(entity)
-                added = True
+            # Rules for classifying one single word
+            if i == 0:
+                if lower_words in drug_bank:
+                    entity["type"] = drug_bank[lower_words]
+                    entities.append(entity)
+                    added = True
+                elif check_suffixes(word):
+                    entity["type"] = "drug"
+                    entities.append(entity)
+                    added = True
+                elif hasAlphaNum(word):
+                    entity["type"] = "drug"
+                    entities.append(entity)
+                    added = True
+                elif word.isupper():
+                    entity["type"] = "brand"
+                    entities.append(entity)
+                    added = True
+
+            # Rules for more than one word
+            else:
+                # Add the next token (word) to the entity
+                try:
+                    words = words + " " + tokens[t+i][0]
+                    lower_words = words.lower()
+                except IndexError:
+                    continue
+
+                if lower_words in drug_bank:
+                    entity["type"] = drug_bank[lower_words]
+                    entities.append(entity)
+                    added = True
+
             i = i+1
-            if i == 3:
+            if i == 3 or i == len(tokens)-t:
                 added = True
     return entities
 
