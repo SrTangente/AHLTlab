@@ -43,7 +43,7 @@ def check_suffixes(words):
     prefixes = ['cef', 'ceph', 'cort', 'pred', 'sulfa']
     suffixes = ['azole', 'idine', 'amine', 'mycin', 'asone', 'bicin', 'afil', 'bital',
                 'caine', 'cillin', 'cycline', 'dipine', 'dronate', 'eprazole', 'fenac',
-                'floxacin', 'gliptin', 'glitazone', 'iramine', 'mab', 'lamide', 'mustine',
+                'floxacin', 'gliptin', 'glitazone', 'iramine', 'ine', 'mab', 'lamide', 'mustine',
                 'mycin', 'nacin', 'olol', 'odone', 'olone', 'onide', 'parin', 'phylline', 'pril',
                 'profen', 'ridone', 'sartan', 'semide', 'setron', 'statin', 'terol',
                 'thiazide', 'tinib', 'trel', 'tretin', 'triptan', 'vir', 'vudine', 'zepam',
@@ -60,7 +60,7 @@ def check_suffixes(words):
 
 
 def hasAlphaNum(word):
-    return re.match("[0-9]+.*[a-zA-Z]+", word) is not None
+    return re.match("^(?=.*[A-Za-z])(?=.*[0-9])[A-Za-z0-9]*$", word) is not None
 
 # process each file in directory
 def extract_entities(tokens):
@@ -83,7 +83,7 @@ def extract_entities(tokens):
                     entity["type"] = drug_bank[lower_words]
                     entities.append(entity)
                     added = True
-                elif check_suffixes(word):
+                '''elif check_suffixes([word]):
                     entity["type"] = "drug"
                     entities.append(entity)
                     added = True
@@ -94,10 +94,10 @@ def extract_entities(tokens):
                 elif word.isupper():
                     entity["type"] = "brand"
                     entities.append(entity)
-                    added = True
+                    added = True'''
 
             # Rules for more than one word
-            else:
+            '''else:
                 # Add the next token (word) to the entity
                 try:
                     words = words + " " + tokens[t+i][0]
@@ -108,7 +108,7 @@ def extract_entities(tokens):
                 if lower_words in drug_bank:
                     entity["type"] = drug_bank[lower_words]
                     entities.append(entity)
-                    added = True
+                    added = True'''
 
             i = i+1
             if i == 3 or i == len(tokens)-t:
