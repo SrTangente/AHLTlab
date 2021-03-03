@@ -21,7 +21,7 @@ def load_drug_bank():
         while line:
             try:
                 [name, type] = line.split('|')
-                drug_bank[name.lower()] = type
+                drug_bank[name.lower()] = type.rstrip()
                 line = db.readline()
             except UnicodeDecodeError:
                 print('Omitting line')
@@ -39,7 +39,7 @@ def tokenize(text):
 
 
 
-def check_suffixes(words):
+def check_affixes(words):
     prefixes = ['cef', 'ceph', 'cort', 'pred', 'sulfa']
     suffixes = ['azole', 'idine', 'amine', 'mycin', 'asone', 'bicin', 'afil', 'bital',
                 'caine', 'cillin', 'cycline', 'dipine', 'dronate', 'eprazole', 'fenac',
@@ -66,53 +66,57 @@ def hasAlphaNum(word):
 def extract_entities(tokens):
     drug_bank = load_drug_bank()
     entities = []
-    for t in range(len(tokens)):
+    t = 0 # the start of the tokens we are currently looking
+    while t < len(tokens):
         word = tokens[t][0]
-        i = 0
+        entity = {
+            'offset': f"{tokens[t][1]}-{tokens[t][2]}",
+            'text': word
+        }
+
+        # See if token alone, or combined with the following, exists in the external resources
+        end = 0 # relative position of 't' of the ending token
         words = word
         lower_words = word.lower()
         added = False
-        while not added:
-            entity = {
-                'offset': f"{tokens[t][1]}-{tokens[t + i][2]}",
-                'text': words
-            }
-            # Rules for classifying one single word
-            if i == 0:
-                if lower_words in drug_bank:
-                    entity["type"] = drug_bank[lower_words]
-                    entities.append(entity)
-                    added = True
-                '''elif check_suffixes([word]):
-                    entity["type"] = "drug"
-                    entities.append(entity)
-                    added = True
-                elif hasAlphaNum(word):
-                    entity["type"] = "drug"
-                    entities.append(entity)
-                    added = True
-                elif word.isupper():
-                    entity["type"] = "brand"
-                    entities.append(entity)
-                    added = True'''
+        while added == False and end < 4 and end < len(tokens)-t:
 
-            # Rules for more than one word
-            '''else:
-                # Add the next token (word) to the entity
-                try:
-                    words = words + " " + tokens[t+i][0]
-                    lower_words = words.lower()
-                except IndexError:
-                    continue
-
-                if lower_words in drug_bank:
-                    entity["type"] = drug_bank[lower_words]
-                    entities.append(entity)
-                    added = True'''
-
-            i = i+1
-            if i == 3 or i == len(tokens)-t:
+            if lower_words in drug_bank:
+                entity["type"] = drug_bank[lower_words]
+                entities.append(entity)
                 added = True
+
+            # Add the next token (word) to the entity
+            try:
+                end = end + 1
+                words = words + " " + tokens[t + end][0]
+                lower_words = words.lower()
+                entity = {
+                    'offset': f"{tokens[t][1]}-{tokens[t + end][2]}",
+                    'text': words
+                }
+            except IndexError:
+                continue
+
+        # If the token (maybe combined with the following) existed in external resources,
+        # just continue with the next iteration
+        if added:
+            t = t + end + 1
+            continue
+
+        # Otherwise, check rules for classifying one single word
+        if check_affixes([word]):
+            entity["type"] = "drug"
+            entities.append(entity)
+        elif hasAlphaNum(word):
+            entity["type"] = "drug"
+            entities.append(entity)
+        elif word.isupper():
+            entity["type"] = "brand"
+            entities.append(entity)
+
+        # Update position for next iteration
+        t = t + 1
     return entities
 
 
