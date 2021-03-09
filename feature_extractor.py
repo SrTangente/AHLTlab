@@ -1,4 +1,5 @@
 from Baseline import *
+from xml.dom.minidom import parse
 
 datadir = './data/train/'
 OUTFILENAME = './results.txt'
@@ -14,12 +15,10 @@ def get_tag(token, gold):
 
 
 def extract_features(tokens):
-    #TODO
-    pass
-
-def parse(filename):
-    #TODO
-    pass
+    features = []
+    for i in range(len(tokens)):
+        #TODO extract features of each token
+    return features
 
 
 # process each file in directory
@@ -47,7 +46,6 @@ for f in listdir(datadir):
         for i in range(0, len(tokens)):
             # see if the token is part of an entity , and which part (B/I)
             tag = get_tag(tokens[i], gold)
-            print(sid, tokens[i][0], tokens[i][1], tokens[i][2],
-            tag , "\t". join ( features [i ]) , sep ='\t')
+            print(sid, tokens[i][0], tokens[i][1], tokens[i][2], tag, "\t".join(features[i]), sep='\t')
         # blank line to separate sentences
         print()
