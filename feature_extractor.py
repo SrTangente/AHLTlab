@@ -4,6 +4,27 @@ from xml.dom.minidom import parse
 datadir = './data/train/'
 OUTFILENAME = './results.txt'
 
+def get_suffixes(words):
+    suffixes = ['azole', 'idine', 'amine', 'mycin', 'asone', 'bicin', 'afil', 'bital',
+                'caine', 'cillin', 'cycline', 'dipine', 'dronate', 'eprazole', 'fenac',
+                'floxacin', 'gliptin', 'glitazone', 'iramine', 'ine', 'mab', 'lamide', 'mustine',
+                'mycin', 'nacin', 'olol', 'odone', 'olone', 'onide', 'parin', 'phylline', 'pril',
+                'profen', 'ridone', 'sartan', 'semide', 'setron', 'statin', 'terol',
+                'thiazide', 'tinib', 'trel', 'tretin', 'triptan', 'vir', 'vudine', 'zepam',
+                'zolam', 'zosin']
+    for suff in suffixes:
+        for word in words:
+            if word.endswith(suff):
+                return suff
+    return None
+
+def get_preffixes(words):
+    prefixes = ['cef', 'ceph', 'cort', 'pred', 'sulfa']
+    for pr in prefixes:
+        for word in words:
+            if word.startswith(pr):
+                return pr
+    return None
 
 def get_tag(token, gold):
     for triplet in gold:
@@ -17,7 +38,28 @@ def get_tag(token, gold):
 def extract_features(tokens):
     features = []
     for i in range(len(tokens)):
-        #TODO extract features of each token
+        word = tokens[i][0]
+        next_word = None
+        prev_word = None
+        if i>0:
+            prev_word = tokens[i-1][0]
+        if i < len(tokens)-1:
+            next_word = tokens[i+1][0]
+
+        preffix = get_preffixes(word)
+        suffix = get_suffixes(word)
+        feature_i = ["form="+word]
+        if(prev_word):
+            feature_i.append("prev="+prev_word)
+        if(next_word):
+            feature_i.append("next="+next_word)
+        if(preffix):
+            feature_i.append("pref="+preffix)
+        if(suffix):
+            feature_i.append("suff="+suffix)
+
+        features.append(feature_i)
+
     return features
 
 
@@ -37,7 +79,7 @@ for f in listdir(datadir):
             # for discontinuous entities , we only get the first span
             offset = e.attributes["charOffset"].value
             (start, end) = offset.split(";")[0].split("-")
-            gold.append((int(start) , int(end) , e.attributes["type"].value))
+            gold.append((int(start), int(end), e.attributes["type"].value))
         # tokenize text
         tokens = tokenize(stext)
         # extract features for each word in the sentence
