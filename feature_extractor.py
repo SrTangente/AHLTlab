@@ -4,7 +4,7 @@ from xml.dom.minidom import parse
 datadir = './data/train/'
 OUTFILENAME = './results.txt'
 
-def get_suffixes(words):
+def get_suffixes(word):
     suffixes = ['azole', 'idine', 'amine', 'mycin', 'asone', 'bicin', 'afil', 'bital',
                 'caine', 'cillin', 'cycline', 'dipine', 'dronate', 'eprazole', 'fenac',
                 'floxacin', 'gliptin', 'glitazone', 'iramine', 'ine', 'mab', 'lamide', 'mustine',
@@ -13,17 +13,15 @@ def get_suffixes(words):
                 'thiazide', 'tinib', 'trel', 'tretin', 'triptan', 'vir', 'vudine', 'zepam',
                 'zolam', 'zosin']
     for suff in suffixes:
-        for word in words:
-            if word.endswith(suff):
-                return suff
+        if word.endswith(suff):
+            return suff
     return None
 
-def get_preffixes(words):
+def get_preffixes(word):
     prefixes = ['cef', 'ceph', 'cort', 'pred', 'sulfa']
     for pr in prefixes:
-        for word in words:
-            if word.startswith(pr):
-                return pr
+        if word.startswith(pr):
+            return pr
     return None
 
 def get_tag(token, gold):
@@ -41,7 +39,7 @@ def extract_features(tokens):
         word = tokens[i][0]
         next_word = None
         prev_word = None
-        if i>0:
+        if i > 0:
             prev_word = tokens[i-1][0]
         if i < len(tokens)-1:
             next_word = tokens[i+1][0]
@@ -49,14 +47,20 @@ def extract_features(tokens):
         preffix = get_preffixes(word)
         suffix = get_suffixes(word)
         feature_i = ["form="+word]
-        if(prev_word):
+        if prev_word:
             feature_i.append("prev="+prev_word)
-        if(next_word):
+        if next_word:
             feature_i.append("next="+next_word)
-        if(preffix):
+        if preffix:
             feature_i.append("pref="+preffix)
-        if(suffix):
+        if suffix:
             feature_i.append("suff="+suffix)
+        if re.search('^.*[0-9]+.*$', word) is not None:
+            feature_i.append("hasDigits="+'1')
+        if re.search('^.*-+.*$', word) is not None:
+            feature_i.append("hasHyphen="+'1')
+        if re.search('^.*,+.*$', word) is not None:
+            feature_i.append("hasComma="+'1')
 
         features.append(feature_i)
 
