@@ -120,26 +120,28 @@ def extract_entities(tokens):
     return entities
 
 
-with open(OUTFILENAME, 'w') as OUTFILE:
-    for f in listdir(DATADIR):
-        # parse XML file , obtaining a DOM tree
-        tree = parse(DATADIR + "/" + f)
-        # process each sentence in the file
-        sentences = tree.getElementsByTagName("sentence")
-        for s in sentences:
-            sid = s.attributes["id"].value  # get sentence id
-            stext = s.attributes["text"].value  # get sentence text
-            # tokenize text
-            try:
-                tokens = tokenize(stext)
-            except ValueError:
-                print(f"Omitting '{stext}' because a ValueError")
-                continue
-            # extract entities from tokenized sentence text
-            entities = extract_entities(tokens)
-            # print sentence entities in format requested for evaluation
-            for e in entities:
-                print(sid +"|" + e["offset"] +"|" + e["text"] + "|" + e["type"], file=OUTFILE)
+if __name__ == "__main__":
 
-# print performance score
-evaluator.evaluate("NER", DATADIR, OUTFILENAME)# process each file in directory
+    with open(OUTFILENAME, 'w') as OUTFILE:
+        for f in listdir(DATADIR):
+            # parse XML file , obtaining a DOM tree
+            tree = parse(DATADIR + "/" + f)
+            # process each sentence in the file
+            sentences = tree.getElementsByTagName("sentence")
+            for s in sentences:
+                sid = s.attributes["id"].value  # get sentence id
+                stext = s.attributes["text"].value  # get sentence text
+                # tokenize text
+                try:
+                    tokens = tokenize(stext)
+                except ValueError:
+                    print(f"Omitting '{stext}' because a ValueError")
+                    continue
+                # extract entities from tokenized sentence text
+                entities = extract_entities(tokens)
+                # print sentence entities in format requested for evaluation
+                for e in entities:
+                    print(sid +"|" + e["offset"] +"|" + e["text"] + "|" + e["type"], file=OUTFILE)
+
+    # print performance score
+    evaluator.evaluate("NER", DATADIR, OUTFILENAME)# process each file in directory
