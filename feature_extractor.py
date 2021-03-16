@@ -42,6 +42,10 @@ def append_features(feature_i, word):
         feature_i.append("pref=" + prefix)
     if suffix:
         feature_i.append("suff=" + suffix)
+    if word.isupper():
+        feature_i.append("upper=" + '1')
+    elif word[0].isupper():
+        feature_i.append("capitalized=" + '1')
     if re.search('^.*[0-9]+.*$', word) is not None:
         feature_i.append("hasDigits=" + '1')
     if re.search('^.*-+.*$', word) is not None:
@@ -54,10 +58,7 @@ def append_features(feature_i, word):
         feature_i.append("hasParenthesis=" + '1')
     if re.search('^.*\%+.*$', word) is not None:
         feature_i.append("hasPercent=" + '1')
-    if word.isupper():
-        feature_i.append("upper=" + '1')
-    elif word[0].isupper():
-        feature_i.append("capitalized=" + '1')
+
 
 def extract_features(toks, drug_bank):
     result = []
@@ -77,7 +78,6 @@ def extract_features(toks, drug_bank):
             feature_i.append("prev=" + prev_word)
         if next_word:
             feature_i.append("next=" + next_word)
-
 
         lower_word = word.lower()
         if lower_word in drug_bank:
