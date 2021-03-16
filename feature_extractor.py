@@ -1,7 +1,7 @@
 import sys
 from os import listdir
 from xml.dom.minidom import parse
-from Baseline import tokenize
+from Baseline import tokenize, load_drug_bank
 import re
 
 
@@ -36,16 +36,16 @@ def get_tag(token, gold):
     return 'O'
 
 
-def extract_features(tokens):
+def extract_features(toks, drug_bank):
     features = []
-    for i in range(len(tokens)):
-        word = tokens[i][0]
+    for i in range(len(toks)):
+        word = toks[i][0]
         next_word = None
         prev_word = None
         if i > 0:
-            prev_word = tokens[i - 1][0]
+            prev_word = toks[i - 1][0]
         if i < len(tokens) - 1:
-            next_word = tokens[i + 1][0]
+            next_word = toks[i + 1][0]
 
         prefix = get_prefixes(word)
         suffix = get_suffixes(word)
@@ -64,11 +64,19 @@ def extract_features(tokens):
             feature_i.append("hasHyphen=" + '1')
         if re.search('^.*,+.*$', word) is not None:
             feature_i.append("hasComma=" + '1')
+        if word.isupper():
+            feature_i.append("upper="+'1')
+        elif word[0].isupper():
+            feature_i.append("cap=" + '1')
+
+        lower_word = word.lower()
+        if lower_word in drug_bank:
+            feature_i.append("drugBank="+'1')
+
 
         features.append(feature_i)
 
     return features
-
 
 if __name__ == "__main__":
 
@@ -76,6 +84,8 @@ if __name__ == "__main__":
         datadir = sys.argv[1]
     except:
         datadir = "data/train/"
+
+    drug_bank = load_drug_bank()
 
     # process each file in directory
     for f in listdir(datadir):
@@ -101,7 +111,7 @@ if __name__ == "__main__":
                 #print(f"Omitting '{stext}' because a ValueError")
                 continue
             # extract features for each word in the sentence
-            features = extract_features(tokens)
+            features = extract_features(tokens, drug_bank)
             # print features in format suitable for the learner / classifier
             for i in range(0, len(tokens)):
                 # see if the token is part of an entity , and which part (B/I)
