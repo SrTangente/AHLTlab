@@ -35,9 +35,32 @@ def get_tag(token, gold):
             return 'I-' + triplet[2]
     return 'O'
 
+def append_features(feature_i, word):
+    prefix = get_prefixes(word)
+    suffix = get_suffixes(word)
+    if prefix:
+        feature_i.append("pref=" + prefix)
+    if suffix:
+        feature_i.append("suff=" + suffix)
+    if re.search('^.*[0-9]+.*$', word) is not None:
+        feature_i.append("hasDigits=" + '1')
+    if re.search('^.*-+.*$', word) is not None:
+        feature_i.append("hasHyphen=" + '1')
+    if re.search('^.*,+.*$', word) is not None:
+        feature_i.append("hasComma=" + '1')
+    if re.search('^.*[({]+.*$', word) is not None or re.search('^.*[})]+.*$', word):
+        feature_i.append("hasParenthesis=" + '1')
+    if re.search('^.*\]+.*$', word) is not None or re.search('^.*\[+.*$', word) is not None:
+        feature_i.append("hasParenthesis=" + '1')
+    if re.search('^.*\%+.*$', word) is not None:
+        feature_i.append("hasPercent=" + '1')
+    if word.isupper():
+        feature_i.append("upper=" + '1')
+    elif word[0].isupper():
+        feature_i.append("capitalized=" + '1')
 
 def extract_features(toks, drug_bank):
-    features = []
+    result = []
     for i in range(len(toks)):
         word = toks[i][0]
         next_word = None
@@ -47,42 +70,26 @@ def extract_features(toks, drug_bank):
         if i < len(tokens) - 1:
             next_word = toks[i + 1][0]
 
-        prefix = get_prefixes(word)
-        suffix = get_suffixes(word)
         feature_i = ["form=" + word]
+        append_features(feature_i, word)
+
         if prev_word:
             feature_i.append("prev=" + prev_word)
         if next_word:
             feature_i.append("next=" + next_word)
-        if prefix:
-            feature_i.append("pref=" + prefix)
-        if suffix:
-            feature_i.append("suff=" + suffix)
-        if re.search('^.*[0-9]+.*$', word) is not None:
-            feature_i.append("hasDigits=" + '1')
-        if re.search('^.*-+.*$', word) is not None:
-            feature_i.append("hasHyphen=" + '1')
-        if re.search('^.*,+.*$', word) is not None:
-            feature_i.append("hasComma=" + '1')
-        if re.search('^.*[({]+.*$', word) is not None or re.search('^.*[})]+.*$', word):
-            feature_i.append("hasParenthesis=" + '1')
-        if re.search('^.*\]+.*$', word) is not None or re.search('^.*\[+.*$', word) is not None:
-            feature_i.append("hasParenthesis=" + '1')
-        if re.search('^.*\%+.*$', word) is not None:
-            feature_i.append("hasPercent=" + '1')
-        if word.isupper():
-            feature_i.append("upper="+'1')
-        elif word[0].isupper():
-            feature_i.append("capitalized=" + '1')
+
 
         lower_word = word.lower()
         if lower_word in drug_bank:
-            feature_i.append("drugBank="+drug_bank[lower_word])
+            feature_i.append("external="+drug_bank[lower_word])
+        if prev_word is not None and prev_word.lower() in drug_bank:
+            feature_i.append("prevExternal="+drug_bank[prev_word.lower()])
+        if next_word is not None and next_word.lower() in drug_bank:
+            feature_i.append("nextExternal="+drug_bank[next_word.lower()])
 
+        result.append(feature_i)
 
-        features.append(feature_i)
-
-    return features
+    return result
 
 if __name__ == "__main__":
 
