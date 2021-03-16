@@ -35,9 +35,13 @@ def tokenize(text):
     :return: a list of tokens triples, each one in the form of (word, start_offset, end_offset)
     """
     words = word_tokenize(text)
-    # TODO: change the way we get the offset for the token, since with "index" a word that appears more than once
-    #  in a sentence is assigned always the offset of its first appearance
-    return [(word, text.index(word), text.index(word)+len(word)-1) for word in words if "&" not in word]
+    text_copy = text
+    result = []
+    for word in words:
+        if "&" not in word:
+            result.append((word, text_copy.index(word), text_copy.index(word)+len(word)-1))
+            text_copy = text_copy.replace(word, ' ' * len(word), 1)
+    return result
 
 
 def check_affixes(words):
