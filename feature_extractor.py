@@ -64,14 +64,20 @@ def extract_features(toks, drug_bank):
             feature_i.append("hasHyphen=" + '1')
         if re.search('^.*,+.*$', word) is not None:
             feature_i.append("hasComma=" + '1')
+        if re.search('^.*[({]+.*$', word) is not None or re.search('^.*[})]+.*$', word):
+            feature_i.append("hasParenthesis=" + '1')
+        if re.search('^.*\]+.*$', word) is not None or re.search('^.*\[+.*$', word) is not None:
+            feature_i.append("hasParenthesis=" + '1')
+        if re.search('^.*\%+.*$', word) is not None:
+            feature_i.append("hasPercent=" + '1')
         if word.isupper():
             feature_i.append("upper="+'1')
         elif word[0].isupper():
-            feature_i.append("cap=" + '1')
+            feature_i.append("capitalized=" + '1')
 
         lower_word = word.lower()
         if lower_word in drug_bank:
-            feature_i.append("drugBank="+'1')
+            feature_i.append("drugBank="+drug_bank[lower_word])
 
 
         features.append(feature_i)
