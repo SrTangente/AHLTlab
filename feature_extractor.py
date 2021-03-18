@@ -3,6 +3,7 @@ from os import listdir
 from xml.dom.minidom import parse
 from Baseline import tokenize, load_drug_bank
 import re
+import numpy as np
 
 
 def get_suffixes(word):
@@ -35,29 +36,36 @@ def get_tag(token, gold):
             return 'I-' + triplet[2]
     return 'O'
 
-def append_features(feature_i, word):
+def append_features(feature_i, word, pos):
     prefix = get_prefixes(word)
     suffix = get_suffixes(word)
+    feature_i.append(pos+"formLower"+word.lower())
+    if len(word) > 2:
+        feature_i.append(pos+"pref3" + word[0: 3])
+        feature_i.append(pos + "suf3" + word[np.max(len(word) - 3, 0): len(word)])
+    if len(word) > 3:
+        feature_i.append(pos+"pref4" + word[0: 4])
+        feature_i.append(pos+"suf4" + word[-4: len(word)])
     if prefix:
-        feature_i.append("pref=" + prefix)
+        feature_i.append(pos+"pref=" + prefix)
     if suffix:
-        feature_i.append("suff=" + suffix)
+        feature_i.append(pos+"suff=" + suffix)
     if word.isupper():
-        feature_i.append("upper=" + '1')
+        feature_i.append(pos+"upper=" + '1')
     elif word[0].isupper():
-        feature_i.append("capitalized=" + '1')
+        feature_i.append(pos+"capitalized=" + '1')
     if re.search('^.*[0-9]+.*$', word) is not None:
-        feature_i.append("hasDigits=" + '1')
+        feature_i.append(pos+"hasDigits=" + '1')
     if re.search('^.*-+.*$', word) is not None:
-        feature_i.append("hasHyphen=" + '1')
+        feature_i.append(pos+"hasHyphen=" + '1')
     if re.search('^.*,+.*$', word) is not None:
-        feature_i.append("hasComma=" + '1')
+        feature_i.append(pos+"hasComma=" + '1')
     if re.search('^.*[({]+.*$', word) is not None or re.search('^.*[})]+.*$', word):
-        feature_i.append("hasParenthesis=" + '1')
+        feature_i.append(pos+"hasParenthesis=" + '1')
     if re.search('^.*\]+.*$', word) is not None or re.search('^.*\[+.*$', word) is not None:
-        feature_i.append("hasParenthesis=" + '1')
+        feature_i.append(pos+"hasParenthesis=" + '1')
     if re.search('^.*\%+.*$', word) is not None:
-        feature_i.append("hasPercent=" + '1')
+        feature_i.append(pos+"hasPercent=" + '1')
 
 
 def extract_features(toks, drug_bank):
@@ -72,11 +80,13 @@ def extract_features(toks, drug_bank):
             next_word = toks[i + 1][0]
 
         feature_i = ["form=" + word]
-        append_features(feature_i, word)
+        append_features(feature_i, word, "")
 
         if prev_word:
             feature_i.append("prev=" + prev_word)
+            append_features(feature_i, prev_word, "prev")
         if next_word:
+            append_features(feature_i, next_word, "next")
             feature_i.append("next=" + next_word)
 
         lower_word = word.lower()

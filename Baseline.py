@@ -1,10 +1,10 @@
-from os import listdir
-import nltk
 import re
-from xml.dom.minidom import parse, parseString
-from nltk.tokenize import word_tokenize
-import evaluator
+from os import listdir
+from xml.dom.minidom import parse
 
+from nltk.tokenize import word_tokenize
+
+import evaluator
 
 DATADIR = './data/devel/'
 OUTFILENAME = './results.txt'
