@@ -32,19 +32,21 @@ if __name__ == "__main__":
             y_train.append(sentece_tags)
             line = file.readline()
 
-    trainer = pycrfsuite.Trainer(verbose=True)
-
-    for xseq, yseq in zip(X_train, y_train):
-        trainer.append(xseq, yseq)
-
-    trainer.set_params({
-        'c1': 1.0,   # coefficient for L1 penalty
-        'c2': 1e-3,  # coefficient for L2 penalty
+    algorithm = "l2sgd"
+    params = {
+        #'c1': 1.0,   # coefficient for L1 penalty
+        #'c2': 1e-4,  # coefficient for L2 penalty
         'max_iterations': 50,  # stop earlier
 
         # include transitions that are possible, but not observed
         'feature.possible_transitions': True
-    })
+    }
+    trainer = pycrfsuite.Trainer(algorithm=algorithm, verbose=True)
+    #print(trainer.params())
+    for xseq, yseq in zip(X_train, y_train):
+        trainer.append(xseq, yseq)
+
+    trainer.set_params(params)
 
     trainer.train(model)
     print(trainer.logparser.iterations[-1])
