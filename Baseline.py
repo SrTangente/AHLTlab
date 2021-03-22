@@ -1,12 +1,17 @@
 import re
 from os import listdir
 from xml.dom.minidom import parse
+import sys
 
 from nltk.tokenize import word_tokenize
 
 import evaluator
 
-DATADIR = './data/devel/'
+try:
+    DATADIR = sys.argv[1]
+except:
+    DATADIR = './data/devel/'
+
 OUTFILENAME = './results.txt'
 
 
