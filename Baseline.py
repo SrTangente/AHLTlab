@@ -12,7 +12,11 @@ try:
 except:
     DATADIR = './data/devel/'
 
-OUTFILENAME = './results.txt'
+try:
+    OUTFILENAME = sys.argv[2]
+except:
+    OUTFILENAME = './results.txt'
+
 
 
 def load_drug_bank():
