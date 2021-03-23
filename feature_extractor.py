@@ -37,12 +37,16 @@ def get_tag(token, gold):
     return 'O'
 
 def append_features(feature_i, word, pos):
+    # Check common drug suffixes
     prefix = get_prefixes(word)
     suffix = get_suffixes(word)
+    # from in lowercase
     feature_i.append(pos+"formLower"+word.lower())
+    # first and last 3 characters
     if len(word) > 2:
         feature_i.append(pos+"pref3" + word[0: 3])
         feature_i.append(pos + "suf3" + word[np.max(len(word) - 3, 0): len(word)])
+    # first and last 4 characters
     if len(word) > 3:
         feature_i.append(pos+"pref4" + word[0: 4])
         feature_i.append(pos+"suf4" + word[-4: len(word)])
@@ -50,12 +54,16 @@ def append_features(feature_i, word, pos):
         feature_i.append(pos+"pref=" + prefix)
     if suffix:
         feature_i.append(pos+"suff=" + suffix)
+    # check if uppercase
     if word.isupper():
         feature_i.append(pos+"upper=" + '1')
+    # check if capitalized
     elif word[0].isupper():
         feature_i.append(pos+"capitalized=" + '1')
+    # check if it has digits
     if re.search('^.*[0-9]+.*$', word) is not None:
         feature_i.append(pos+"hasDigits=" + '1')
+    # check if it has hyphens, commas, parenthesis...
     if re.search('^.*-+.*$', word) is not None:
         feature_i.append(pos+"hasHyphen=" + '1')
     if re.search('^.*,+.*$', word) is not None:
@@ -82,14 +90,17 @@ def extract_features(toks, drug_bank):
         feature_i = ["form=" + word]
         append_features(feature_i, word, "")
 
+        # append previous and next words, and also compute every feature for them
         if prev_word:
             feature_i.append("prev=" + prev_word)
+            # by indicating 'prev' we add this prefix to all appended features
             append_features(feature_i, prev_word, "prev")
         if next_word:
             append_features(feature_i, next_word, "next")
             feature_i.append("next=" + next_word)
 
         lower_word = word.lower()
+        # finally, check if the word or their neighbours are inside the drug bank
         if lower_word in drug_bank:
             feature_i.append("external="+drug_bank[lower_word])
         if prev_word is not None and prev_word.lower() in drug_bank:
